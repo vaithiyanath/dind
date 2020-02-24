@@ -17,7 +17,7 @@ set -o nounset
 set -o pipefail
 set -o errtrace
 
-if [ $(uname) = vaithi ]; then
+if [ $(uname) = Darwin ]; then
   readlinkf(){ perl -MCwd -e 'print Cwd::abs_path shift' "$1";}
 else
   readlinkf(){ readlink -f "$1"; }
@@ -51,7 +51,7 @@ if [[ $(uname) == Linux && -z ${DOCKER_HOST:-} ]]; then
     using_local_linuxdocker=1
 fi
 
-EMBEDDED_CONFIG=y;DOWNLOAD_KUBECTL=y;DIND_K8S_VERSION=v1.15;DIND_IMAGE_DIGEST=sha256:12574f2350c69da756ae10b85af0e1ff689a2b5fd3728a2f3112c68195c08d8c;DIND_COMMIT=62f5a9277678777b63ae55d144bd2f99feb7c824
+EMBEDDED_CONFIG=y;DOWNLOAD_KUBECTL=y;DIND_K8S_VERSION=v1.17;DIND_IMAGE_DIGEST=sha256:12574f2350c69da756ae10b85af0e1ff689a2b5fd3728a2f3112c68195c08d8c;DIND_COMMIT=62f5a9277678777b63ae55d144bd2f99feb7c824
 
 # dind::localhost provides the local host IP based on the address family used for service subnet.
 function dind::localhost() {
@@ -775,7 +775,7 @@ function dind::ensure-downloaded-kubectl {
   local kubectl_url
   local kubectl_sha1
   local kubectl_sha1_linux
-  local kubectl_sha1_vaithi
+  local kubectl_sha1_darwin
   local kubectl_link
   local kubectl_os
 
@@ -787,9 +787,9 @@ function dind::ensure-downloaded-kubectl {
 
   eval "$(docker run --entrypoint /bin/bash --rm "${DIND_IMAGE}" -c "cat /dind-env")"
 
-  if [ $(uname) = vaithi ]; then
-    kubectl_sha1="${KUBECTL_vaithi_SHA1}"
-    kubectl_url="${KUBECTL_vaithi_URL}"
+  if [ $(uname) = Darwin ]; then
+    kubectl_sha1="${KUBECTL_DARWIN_SHA1}"
+    kubectl_url="${KUBECTL_DARWIN_URL}"
   else
     kubectl_sha1="${KUBECTL_LINUX_SHA1}"
     kubectl_url="${KUBECTL_LINUX_URL}"
@@ -817,7 +817,7 @@ function dind::ensure-kubectl {
     dind::ensure-downloaded-kubectl
     return 0
   fi
-  if [ $(uname) = vaithi ]; then
+  if [ $(uname) = Darwin ]; then
     dind::step "Building kubectl"
     dind::step "+ make WHAT=cmd/kubectl"
     make WHAT=cmd/kubectl 2>&1 | dind::filter-make-output
@@ -1164,13 +1164,13 @@ function dind::ensure-dashboard-clusterrolebinding {
 function dind::deploy-dashboard {
   local url="${DASHBOARD_URL:-}"
   if [ ! "$url" ]; then
-    local cmp_api_to_1_15=0
-    dind::compare-versions 'kubeapi' "$(dind::kubeapi-version)" 1 15 || cmp_api_to_1_15=$?
-    if [[ $cmp_api_to_1_15 == 2 ]]; then
-      # API version < 1.15
+    local cmp_api_to_1_16=0
+    dind::compare-versions 'kubeapi' "$(dind::kubeapi-version)" 1 16 || cmp_api_to_1_16=$?
+    if [[ $cmp_api_to_1_16 == 2 ]]; then
+      # API version < 1.16
       url='https://rawgit.com/kubernetes/dashboard/bfab10151f012d1acc5dfb1979f3172e2400aa3c/src/deploy/kubernetes-dashboard.yaml'
     else
-      # API version >= 1.15
+      # API version >= 1.16
       url='https://rawgit.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml'
     fi
   fi
