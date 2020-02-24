@@ -592,7 +592,7 @@ function dind::retry {
   "$@"
 }
 
-busybox_image="busybox:1.30.1"
+busybox_image="ubuntu:latest"
 e2e_base_image="golang:1.12.4"
 sys_volume_args=()
 build_volume_args=()
@@ -1757,7 +1757,7 @@ spec:
           readOnly: true
       initContainers:
       - name: install-cni
-        image: busybox
+        image: ubuntu
         imagePullPolicy: Always
         command:
         - /bin/sh
